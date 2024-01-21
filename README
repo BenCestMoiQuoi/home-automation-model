@@ -7,4 +7,9 @@ On a Raspberry Pi card, we coded in Python to be able to manage at the same time
 
 Some sensors no longer work, we still programmed them in case they are changed
 
+To launch the program, simply run in cmd
+```batch
+python -m src
+```
+
 January 2024
