@@ -12,4 +12,4 @@ To launch the program, simply run in cmd
 python -m src
 ```
 
-January 2024
+`January 2024`
