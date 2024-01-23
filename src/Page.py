@@ -1,13 +1,17 @@
 import tkinter as tk
 
+# All the parameters are changed in real time with the changement_variable function
 
 
+# Main interface, it's possible to choose a room interface
+# thanks to button
 class House(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        # initialization of each button
         self.l_text = Label(self, text="Pannel control of the House")
-        self.f_house = tk.Frame(self)
+        self.f_house = tk.Frame(self) # a frame is the simplest way to make other buttons
         self.b_quit = Button(self, text="Leave", command=controller.on_closing)
 
         self.b_bathroom = Button(self.f_house, text='Bathroom', command=lambda p='Bathroom': controller.change_page(p))
@@ -17,6 +21,7 @@ class House(tk.Frame):
         self.b_salon = Button(self.f_house, text='Salon', command=lambda p='Salon': controller.change_page(p))
         self.b_sauna = Button(self.f_house, text='Sauna', command=lambda p='Sauna': controller.change_page(p))
 
+        # gird of each button
         self.l_text.grid(row=0, column=0, columnspan=2)
         self.f_house.grid(row=1, column=0)
         self.b_quit.grid(row=2, column=1)
@@ -28,7 +33,8 @@ class House(tk.Frame):
         self.b_salon.grid(row=1, column=1)
         self.b_sauna.grid(row=1, column=2)
 
-
+# Bathroom interface
+# LED, Contactor, Light (depend of the Pir sensor)
 class Bathroom(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -68,7 +74,8 @@ class Bathroom(tk.Frame):
         elif variable == 'PIR' and not status:
             self.var_rel.set('Off')
 
-
+# Bedroom interface
+# LED, Contactor, Light
 class Bedroom(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -108,7 +115,9 @@ class Bedroom(tk.Frame):
         elif variable == 'PIR' and not status:
             self.var_rel.set('Off')
 
-
+# Garage interface
+# LEDs, Motor, Motor_Clockwise, Optical barriere, 
+# Button, Lmitie Up, Limite Down
 class Garage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -172,8 +181,8 @@ class Garage(tk.Frame):
         elif variable == 'Limit_2':
             self.var_lim2.set(str(status))
         
-
-
+# Kitchen interface
+# LED, Contactor 1, Contactor 2
 class Kitchen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -214,7 +223,8 @@ class Kitchen(tk.Frame):
         elif variable == 'CONTACT_2' and status:
             self.var_con2.set('Open')
 
-
+# Salon interface
+# LED, Contactor
 class Salon(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -246,41 +256,51 @@ class Salon(tk.Frame):
         elif variable == 'CONTACT' and status:
             self.var_con.set('Open')
 
-
+# Sauna interface
+# LED contactor, LED Peltier, Contactor, Peltier, 
+# Sensor DHT (Humidity and Temperature)
 class Sauna(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        self.var_led = tk.StringVar()
+        self.var_led1 = tk.StringVar()
+        self.var_led2 = tk.StringVar()
         self.var_con = tk.StringVar()
+        self.var_pel = tk.StringVar()
         self.var_temp = tk.StringVar()
         self.var_humi = tk.StringVar()
 
-        self.var_led.set('Off')
+        self.var_led1.set('Off')
+        self.var_led2.set('Not used')
         self.var_con.set('Close')
+        self.var_pel.set('Not used')
         self.var_temp.set('')
         self.var_humi.set('')
 
         self.l_text = Label(self, text='Sauna')
-        self.l_var = [Label(self, text="LED : "), Label(self, textvariable=self.var_led)]
+        self.l_var1 = [Label(self, text="LED Contactor : "), Label(self, textvariable=self.var_led1)]
+        self.l_var2 = [Label(self, text="LED Peltier : "), Label(self, textvariable=self.var_led2)]
         self.l_con = [Label(self, text="CONTACTOR : "), Label(self, textvariable=self.var_con)]
+        self.l_pel = [Label(self, text="PELTIER : "), Label(self, textvariable=self.var_pel)]
         self.l_dht1 = [Label(self, text="Température : "), Label(self, textvariable=self.var_temp)]
         self.l_dht2 = [Label(self, text="Humidity : "), Label(self, textvariable=self.var_humi)]
         self.b_retu = Button(self, text='Return', command=lambda p='House': controller.change_page(p))
 
         self.l_text.grid(row=0, column=0, columnspan=3)
         for i in range(2):
-            self.l_var[i].grid(row=1, column=i, pady=(0, 10))
+            self.l_var1[i].grid(row=1, column=i, pady=(0, 10))
             self.l_con[i].grid(row=2, column=i, pady=(0, 10))
-            self.l_dht1[i].grid(row=3, column=i, pady=(0, 10))
-            self.l_dht2[i].grid(row=4, column=i, pady=(0, 10))
-        self.b_retu.grid(row=5, column=2, padx=(10, 0))
+            self.l_var2[i].grid(row=3, column=i, pady=(0, 10))
+            self.l_pel[i].grid(row=4, column=i, pady=(0, 10))
+            self.l_dht1[i].grid(row=5, column=i, pady=(0, 10))
+            self.l_dht2[i].grid(row=6, column=i, pady=(0, 10))
+        self.b_retu.grid(row=7, column=2, padx=(10, 0))
 
     def changement_variable(self, variable, status):
         if variable == 'LED' and not status:
-            self.var_led.set('Off')
+            self.var_led1.set('Off')
         elif variable == 'LED' and status:
-            self.var_led.set('Alight')
+            self.var_led1.set('Alight')
         elif variable == 'CONTACT' and not status:
             self.var_con.set('Close')
         elif variable == 'CONTACT' and status:
@@ -290,7 +310,7 @@ class Sauna(tk.Frame):
         elif variable == 'HUMIDITY':
             self.var_humi.set(f'{status} %')
 
-
+# Classes to modify to make interface pretty
 class Button(tk.Button):
     def __init__(self, *args, **kwargs):
         tk.Button.__init__(self, font=("Times New Roman", 16), *args, **kwargs)

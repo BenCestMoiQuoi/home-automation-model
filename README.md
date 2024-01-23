@@ -12,4 +12,8 @@ To launch the program, simply run in cmd
 python -m src
 ```
 
-`January 2024`
+For more informations, we have make an report, it's possible to see it
+
+`January 2024`      `Gasnier Ugo`   `Roche Corentin`
+`Politechnika Koszalińska`      `Mecahtronics department`
+ `Embedded Computer System Architecture and Programming`

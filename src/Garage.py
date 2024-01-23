@@ -44,8 +44,10 @@ class Garage:
         GPIO.output(self.in1_pin, GPIO.LOW)
         GPIO.output(self.in2_pin, GPIO.LOW)
 
+        # controller is the mother class variable
         self.controller = controller
 
+        # initialization of all variables for programs
         self.is_motor_running = False
         self.is_motor_clockwise = True
         self.is_button_pressed = False
@@ -59,6 +61,7 @@ class Garage:
         self.pin_low = self.in1_pin
         self.pin_high = self.in2_pin
 
+        # initialization and run of subprograms in parallelization
         sensors = threading.Thread(target=self._sensors)
         mesuring_distance = threading.Thread(target=self._mesuring_distance)
         run_portal = threading.Thread(target=self._run_portal)
@@ -66,12 +69,12 @@ class Garage:
         sensors.start()
         mesuring_distance.start()
 
+    # Subprogram witch mesuring the distance between the wall and the car with ultrason sensor
+    # and show the distance with 3 LEDs (green, orange and red) 
     def _mesuring_distance(self):
         lock = threading.Lock()
         lock.acquire()
         val_distance = None
-        start_time = time.time()
-        stop_time = time.time()
         while self.controller.valid:
             GPIO.output(self.TRIG, GPIO.HIGH)
             time.sleep(0.00001)
@@ -79,39 +82,38 @@ class Garage:
             
             first_time = time.time()
 
+            # mesuring the time between send and receive of the wave
             while not GPIO.input(self.ECHO) and self.controller.valid:
                 start_time = time.time()
                 if start_time-first_time >= 0.001:
                     break
-
-            while GPIO.input(self.ECHO) and self.controller.valid:
-                stop_time = time.time()
             
             ptime = start_time-first_time
             distance = ptime * 34300 / 2
             temp_val_distance = val_distance
-            if distance < 5 and self.controller.valid:
+            # Edit if it have a changment the color of the LEDs
+            if distance < 5:
                 val_distance = 0
                 if temp_val_distance != val_distance:
                     GPIO.output(self.GREEN_LED, False)
                     GPIO.output(self.YELLOW_LED, False)
                     GPIO.output(self.RED_LED, True)
                     self.controller.changement_variable('Garage', 'LEDS', 'Red')
-            elif distance < 10 and self.controller.valid:
+            elif distance < 10:
                 val_distance = 1
                 if temp_val_distance != val_distance:
                     GPIO.output(self.GREEN_LED, False)
                     GPIO.output(self.YELLOW_LED, True)
                     GPIO.output(self.RED_LED, False)
                     self.controller.changement_variable('Garage', 'LEDS', 'Yellow')
-            elif distance < 20 and self.controller.valid:
+            elif distance < 20:
                 val_distance = 2
                 if temp_val_distance != val_distance:
                     GPIO.output(self.GREEN_LED, True)
                     GPIO.output(self.YELLOW_LED, False)
                     GPIO.output(self.RED_LED, False)
                     self.controller.changement_variable('Garage', 'LEDS', 'Green')
-            elif self.controller.valid:
+            else:
                 val_distance = 3
                 if temp_val_distance != val_distance:
                     GPIO.output(self.GREEN_LED, False)
@@ -122,6 +124,8 @@ class Garage:
             time.sleep(0.2)
         lock.release()
 
+    # Subprogram witch sound all sensors to change variables and edit the house interface
+    # Limite up, limite down, optical barriere and button.
     def _sensors(self):
         lock = threading.Lock()
         lock.acquire()
@@ -150,11 +154,11 @@ class Garage:
                 self.is_button_pressed = not self.is_button_pressed
                 self.have_changed = True
                 self.controller.changement_variable('Garage', 'Button', self.is_button_pressed)
-            
+            # look if have a change on sensor to update the state of the motor If it's necessary
             if self.have_changed:
                 if self.is_limit_1 and not self.is_motor_clockwise and self.is_motor_running:
-                    GPIO.output(self.pin_high, GPIO.LOW)
-                    self.is_motor_clockwise = not self.is_motor_clockwise
+                    GPIO.output(self.pin_high, GPIO.LOW) # stop the motor
+                    self.is_motor_clockwise = not self.is_motor_clockwise # change the next rotation of the motor
                     self.is_motor_running = False
                     self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
                     self.controller.changement_variable('Garage', 'Motor', self.is_motor_running)
@@ -170,28 +174,29 @@ class Garage:
                     self.is_motor_running = False
                     self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
                     self.controller.changement_variable('Garage', 'Motor', self.is_motor_running)
-                    
-
         lock.release()
 
+    # Subprogram witch run the portal with parameters already define
     def _run_portal(self):
         lock = threading.Lock()
         lock.acquire()
         time.sleep(0.5)
 
         while self.controller.valid:
+        # If the button is pressed
             while self.is_button_pressed:
                 if not self.controller.valid:
                     self.is_button_pressed = False
-            
+            # If motor sleep and optical barriere free or optical barriere break and portal sens up
             if not self.is_motor_running and (not self.is_barriere_brocken or (self.is_barriere_brocken and not self.is_motor_clockwise)) and self.controller.valid:
-                if self.is_limit_2 and self.is_motor_clockwise: # A voir pour ca
+                # change the clockwise if it's necessary
+                if self.is_limit_2 and self.is_motor_clockwise:
                     self.is_motor_clockwise = False
                     self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
                 elif self.is_limit_1 and not self.is_motor_clockwise:
                     self.is_motor_clockwise = True
                     self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
-
+                # change the High and Low pin for the motor (rotation sens)
                 if self.is_motor_clockwise:
                     self.pin_low = self.in2_pin
                     self.pin_high = self.in1_pin
@@ -200,22 +205,24 @@ class Garage:
                     self.pin_low = self.in1_pin
                     self.pin_high = self.in2_pin
                     self.switch_clock = self.limit_switch_pin1
-
+                # define motor running
                 GPIO.output(self.pin_low, GPIO.LOW)
                 GPIO.output(self.pin_high, GPIO.HIGH)
                 self.is_motor_running = True
                 self.controller.changement_variable('Garage', 'Motor', self.is_motor_running)
+            # If motor running, stop it
             elif self.is_motor_running:
                 GPIO.output(self.pin_high, GPIO.LOW)
                 self.is_motor_running = False
                 self.is_motor_clockwise = not self.is_motor_clockwise
                 self.controller.changement_variable('Garage', 'Motor', self.is_motor_running)
                 self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
+            # If motor sleep, barriere break and portal clockwise to down
             elif self.is_barriere_brocken:
+                # change the clockwise, you can after push an other time the button to make motor running
                 self.is_motor_clockwise = False
                 self.controller.changement_variable('Garage', 'Clockwise', self.is_motor_clockwise)
-
-            
+            # check if the button is realsed
             while not self.is_button_pressed:
                 if not self.controller.valid:
                     self.is_button_pressed = True 
